@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class Mine : MonoBehaviour
@@ -6,44 +7,33 @@ public class Mine : MonoBehaviour
     [SerializeField] private float _radiusDetection;
     [SerializeField] private float _radiusDamage;
     [SerializeField] private float _strength;
-    [SerializeField] private float _upwardModifier = 2;
     [SerializeField] private LayerMask _explodableMask;
     [SerializeField] private Animator _animator;
 
-    private string _isTickingAnimation = "IsTicking";
-    private float _timeToExplode;
+    private string _isTickingAnimation = "IsTicking";    
     private ExplosionFactory _explosionFactory;
-    private bool _isTickingToExplode;
 
     public void Initialize(ExplosionFactory explosionFactory)
     {
         _explosionFactory = explosionFactory;
-        _timeToExplode = _delayExplosion;
-        _isTickingToExplode = false;
     }
 
-    public void Explode()
+    public void CreateExplosion()
     {
         Explosion explosion = _explosionFactory.Get(transform, _strength);
-        explosion.Initialize(transform.position, _strength, _radiusDamage, _upwardModifier);
+        explosion.Initialize(transform.position, _strength, _radiusDamage);
         Destroy(gameObject);
     }
 
     private void Update()
     {
         CheskExplodableInRadius();
-        CheckTickingToExplode();
     }
 
-    private void CheckTickingToExplode()
+    private IEnumerator DelayBeforeExplosion()
     {
-        if (_isTickingToExplode)
-        {
-            _timeToExplode -= Time.deltaTime;
-
-            if (_timeToExplode <= 0)
-                Explode();
-        }
+        yield return new WaitForSeconds(_delayExplosion);
+        CreateExplosion();
     }
 
     private void CheskExplodableInRadius()
@@ -52,15 +42,20 @@ public class Mine : MonoBehaviour
 
         foreach (Collider hit in colliders)
         {
-            Explodable _explodable = hit.GetComponent<Explodable>();
+            IExplodable _explodable = hit.GetComponent<IExplodable>();
 
             if (_explodable != null)
-            {
-                _isTickingToExplode = true;
-                AnimationTicking();
+            {                
+                StartReactionToExplodable();
                 break;
             }
         }
+    }
+
+    private void StartReactionToExplodable()
+    {
+        StartCoroutine(DelayBeforeExplosion());
+        AnimationTicking();
     }
 
     private void AnimationTicking()

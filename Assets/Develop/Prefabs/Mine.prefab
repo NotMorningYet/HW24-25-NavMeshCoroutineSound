@@ -55,6 +55,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   _animator: {fileID: 7637155214309372729}
+  _explosionSound: {fileID: 0}
 --- !u!95 &7637155214309372729
 Animator:
   serializedVersion: 5

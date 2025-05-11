@@ -5,19 +5,26 @@ public class CharacterView : MonoBehaviour
     private readonly int IsRunningKey = Animator.StringToHash("IsRunning");
     private readonly int GetHitKey = Animator.StringToHash("GetHit");
     private readonly int DiedKey = Animator.StringToHash("Died");
+    private readonly int InJumpProcess = Animator.StringToHash("InJumpProcess");
+    private readonly int JumpSpeed = Animator.StringToHash("JumpSpeedModifier");
+
+    private float _defaultJumpAnimationSpeed = 0.6f;
     private int _injuredLayer = 1;
     private int _layerOff = 0;
     private int _layerOn = 1;
 
     [SerializeField] private Animator _animator;
-    [SerializeField] private Character _character;
+    [SerializeField] private CharacterAgent _character;
 
     private void Update()
     {
-        if (_character.Health.Died)
+        SetJumpAnimationSpeed();
+        _animator.SetBool(InJumpProcess, _character.IsInJump);
+
+        if (_character.Dead)
             return;
 
-        if (_character.Health.Injured)        
+        if (_character.Injured)        
             SetInjuredAnimations();        
         else
             SetHealthyAnimations();
@@ -56,5 +63,11 @@ public class CharacterView : MonoBehaviour
     private void StartRunning()
     {
         _animator.SetBool(IsRunningKey, true);
+    }
+
+    private void SetJumpAnimationSpeed()
+    {
+        float modifier = _defaultJumpAnimationSpeed / _character.JumpDuration;
+        _animator.SetFloat(JumpSpeed, modifier);
     }
 }

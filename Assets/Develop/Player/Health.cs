@@ -1,46 +1,52 @@
 using UnityEngine;
 
-public class Health: ITakeDamagable
+public class Health : ISpeedModifier
 {
     private int _health;
     private int _maxHealth;
-    private float _injuredPercent;
-    private CharacterView _characterView;
+    private float _percentToInjured;
     private bool _died;
+    private float _injuredSpeedModifier = 0.4f;
 
-    public Health(CharacterView characterView, int maxHealth, int injuredPercent)
+    public Health( int maxHealth, int percentToInjured)
     {
-        _characterView = characterView;
         _maxHealth = maxHealth;
         _health = maxHealth;
-        _injuredPercent = injuredPercent;
+        _percentToInjured = percentToInjured;
         _died = false;
     }
 
-    public int HP =>_health;
-    public bool Injured => _health <=_maxHealth * _injuredPercent / 100;
+    public int HP => _health;
+    public bool Injured => _health <= _maxHealth * _percentToInjured / 100;
     public bool Died => _died;
 
-    public void TakeDamage(int damage)
+    public void ChangeHealth(int deltaHealth)
     {
-        if (damage > 0)
-        {
-            _health -= damage;
-            _characterView.GetHit();
-        }
+        _health += deltaHealth;
 
         if (_health <= 0)
         {
             _health = 0;
-            _characterView.Die();
             Die();
         }
+
+        if (_health > _maxHealth)
+            _health = _maxHealth;        
 
         Debug.Log($"Çהמנמגüו: {_health}");
     }
 
-    private void Die()
+    public float GetModifier()
     {
+        if (Injured)
+            return _injuredSpeedModifier;
+        
+        return 1f;
+        
+    }
+
+    private void Die()
+    {                
         _died = true;
     }
 }

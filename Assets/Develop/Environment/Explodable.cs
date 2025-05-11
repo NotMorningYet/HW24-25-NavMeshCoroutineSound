@@ -1,31 +1,18 @@
 using UnityEngine;
 
-public class Explodable : MonoBehaviour, IExplodable
-{
-    private ITakeDamagable _healthComponent;
-    private Transform _explodableTransform;
-        
-    public void Initialize(ITakeDamagable healthComponent, Transform explodableTransform)
-    {
-        _healthComponent = healthComponent;
-        _explodableTransform = explodableTransform;
-    }
-
-    public void TakeExplosionEffect(Vector3 explosionPosition, float explosionStrength, float explosionRadius, float upwardModifier)
+public class Explodable
+{        
+    public int CalculateDamage(Vector3 position, Vector3 explosionPosition, float strength, float radiusMax)
     {
         Debug.Log("Ёффект от взрыва получен");
-        Vector3 forceDirection = explosionPosition - _explodableTransform.position;
+        Vector3 forceDirection = position - explosionPosition;
         float distanceToExplosion = forceDirection.magnitude;
+        int damage = Mathf.RoundToInt(strength * (1 - distanceToExplosion / radiusMax));
+        
+        if (damage < 0)
+            damage = 0;
 
-        int explosionForce = CalculateForce(distanceToExplosion, explosionStrength, explosionRadius);
-
-        _healthComponent.TakeDamage(explosionForce);
-    }
-
-    private int CalculateForce(float distanceToExplosion, float explosionStrength, float explosionradius)
-    {
-        int force = Mathf.RoundToInt(explosionStrength * (1 - distanceToExplosion / explosionradius));
-        Debug.Log($"”рон = {force}");
-        return force;
+        Debug.Log($"”рон = {damage}");
+        return damage;
     }
 }

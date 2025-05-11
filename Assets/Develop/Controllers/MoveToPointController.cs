@@ -1,23 +1,23 @@
 using UnityEngine;
+using UnityEngine.AI;
 
 public abstract class MoveToPointController : Controller
 {
     private readonly string _walkableMask = "Walkable";
     private Vector3 _targetPosition;
     private float _reachingDistance = 0.2f;
-    private Navigator _navigator;
     private bool _isInvalidTarget;
+    private NavMeshPath _pathToTarget = new NavMeshPath();
 
-    protected Character _character;
+    protected CharacterAgent _character;
     protected bool _isMoving;
-    protected IMoverListnener _moverListnener;
+    protected IMoverListener _moverListnener;
 
     protected abstract Ray GetRay();
 
-    public MoveToPointController(Character character, Navigator navigator, IMoverListnener moverListnener)
+    public MoveToPointController(CharacterAgent character,  IMoverListener moverListnener)
     {
         _character = character;
-        _navigator = navigator;
         _targetPosition = character.CurrentPosition;
         _moverListnener = moverListnener;
         _isMoving = false;
@@ -33,62 +33,52 @@ public abstract class MoveToPointController : Controller
     {
         if (_isMoving)
         {
+            if (_character.IsOnNavMeshLink(out OffMeshLinkData offMeshLinkData))
+            {
+                if (_character.IsInJump == false)
+                {
+                    _character.SetRotationDirection(offMeshLinkData.endPos - _character.CurrentPosition);
+                    _character.Jump(offMeshLinkData);
+                }
+                return;
+            }
+
+            _character.TryGetPath(_targetPosition, _pathToTarget);
+
             if (IsTargetReached())
             {
-                SetDirection(Vector3.zero);
                 _isMoving = false;
-                _targetPosition = _character.CurrentPosition;
+                _character.StopMove();
                 _moverListnener.OnStopMove();
                 return;
             }
 
-            SetDirection(GetTargetDirection());
+            _character.SetDestination(_targetPosition);
         }
     }
 
-    protected virtual void HandleTargetUpdate()
-    {
-
-    }
+    protected virtual void HandleTargetUpdate() { }
 
     protected bool TrySetTargetPosition()
     {
-        _targetPosition = GetTargetWorldPosition(out _isInvalidTarget);
+        Vector3 potentialTargetPosition = GetTargetWorldPosition(out _isInvalidTarget);        
+
         if (_isInvalidTarget)
             return false;
-
-        Vector3 direction = GetTargetDirection();
-        
-        if (direction != Vector3.zero) 
+        else 
+            _targetPosition = potentialTargetPosition;
+                
+        if (_character.TryGetPath(_targetPosition, _pathToTarget)) 
         {
             _isMoving = true;
             _moverListnener.OnStartMove(_targetPosition);
+            _character.ResumeMove();
             return true;
         }
 
         return false;
-    }
-
-    private Vector3 GetTargetDirection()
-    {
-        return _navigator.GetDirection(_character.CurrentPosition, _targetPosition).normalized;
-    }
-
-    private bool IsTargetReached()
-    {
-        Vector3 toTarget = _character.CurrentPosition - _targetPosition;
-        toTarget.y = 0;
-        float distance = toTarget.magnitude;
-
-        return distance <= _reachingDistance;
-    }
-
-    private void SetDirection(Vector3 direction)
-    {
-        _character.SetMoveDirection(direction);
-        _character.SetRotationDirection(direction);
-    }
-
+    }    
+        
     private Vector3 GetTargetWorldPosition(out bool _isInvalidTarget)
     {        
         _isInvalidTarget = false;
@@ -97,9 +87,12 @@ public abstract class MoveToPointController : Controller
 
         if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, LayerMask.GetMask(_walkableMask)))
             position = hit.point;
-        else 
+        else
             _isInvalidTarget = true;
-
+        
         return position;
     }
+
+    private bool IsTargetReached() 
+        => NavMeshUtils.GetPathLength(_pathToTarget) <= _reachingDistance;
 }

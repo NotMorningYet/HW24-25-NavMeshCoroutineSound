@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class TargetPointView : MonoBehaviour, IMoverListnener
+public class TargetPointView : MonoBehaviour, IMoverListener
 {
     [SerializeField] private Animator _animator;
     private Vector3 _position;
