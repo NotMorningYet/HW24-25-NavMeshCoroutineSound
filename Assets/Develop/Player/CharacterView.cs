@@ -21,10 +21,10 @@ public class CharacterView : MonoBehaviour
         SetJumpAnimationSpeed();
         _animator.SetBool(InJumpProcess, _character.IsInJump);
 
-        if (_character.Dead)
+        if (_character.IsDead)
             return;
 
-        if (_character.Injured)        
+        if (_character.IsInjured)        
             SetInjuredAnimations();        
         else
             SetHealthyAnimations();

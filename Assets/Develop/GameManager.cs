@@ -7,7 +7,9 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        _character.Initialize(_targetPointView);
+        MasterController _masterController = new MasterController(_character, _targetPointView);
+        _masterController.Enable();
+        _character.Initialize(_masterController);
     }
 }
 

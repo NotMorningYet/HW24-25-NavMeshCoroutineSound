@@ -1,17 +1,14 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class CharacterAgent : MonoBehaviour, IDirectionalRotatable, IExplodable, ITakeDamagable, IDying
 {
     [SerializeField] private CharacterView _characterView;
-    [SerializeField] private SoundSource _soundSource;
     [SerializeField] private float _normalSpeed;
     [SerializeField] private float _jumpSpeed;
     [SerializeField] private float _rotationSpeed;
     [SerializeField] private int _maxHealth;
-    [SerializeField] private int _percentToInjured;
-    [SerializeField] float _patrolingRadius;
+    [SerializeField] private int _percentToInjured;    
     [SerializeField] private AnimationCurve _jumpCurve;
 
     private NavMeshAgent _agent;
@@ -21,18 +18,19 @@ public class CharacterAgent : MonoBehaviour, IDirectionalRotatable, IExplodable,
     private AgentJumper _jumper;
     private Explodable _explodable;
     private MasterController _masterController;
-    private Dictionary<ControllersTypes, Controller> _controllers = new Dictionary<ControllersTypes, Controller>();
-    private Controller _defaultController;
+
 
     public Vector3 CurrentVelocity => _mover.CurrentVelocity;
     public Vector3 CurrentPosition => transform.position;
     public Quaternion CurrentRotation => _rotator.CurrentRotation;
     public int HP => _health.HP;
-    public bool Injured => _health.Injured;
-    public bool Dead { get; private set; }
+    public bool IsInjured => _health.IsInjured;
+    public bool IsDead { get; private set; }
 
-    public void Initialize(IMoverListener moverListnener)
+    public void Initialize(MasterController masterController)
     {
+        _masterController = masterController;
+
         _health = new Health(_maxHealth, _percentToInjured);
         _explodable = new Explodable();
 
@@ -45,20 +43,15 @@ public class CharacterAgent : MonoBehaviour, IDirectionalRotatable, IExplodable,
         _jumper = new AgentJumper(_jumpSpeed, _agent, _jumpCurve, this);
         _rotator = new DirectionalRotator(transform, _rotationSpeed);
 
-        CreateControllers(moverListnener);
-
-        _masterController = new MasterController(this, _controllers, _defaultController);
-        _masterController.Enable();
-
-        Dead = false;
+        IsDead = false;
     }
 
     private void Update()
     {
-        if (Dead)
+        if (IsDead)
             return;
 
-        if (_health.Died)
+        if (_health.IsDead)
         {
             Die();
             return;
@@ -72,13 +65,6 @@ public class CharacterAgent : MonoBehaviour, IDirectionalRotatable, IExplodable,
         _masterController.Update(Time.deltaTime);
         _rotator.SetInputDirection(_agent.desiredVelocity);
         _rotator.Update(Time.deltaTime);
-    }
-
-    private void CreateControllers(IMoverListener moverListnener)
-    {
-        _controllers.Add(ControllersTypes.MouseClick, new NavMeshAgentMouseController(this, moverListnener));
-        _controllers.Add(ControllersTypes.Patrol, new NavMeshPatrolController(this, moverListnener, _patrolingRadius));
-        _defaultController = _controllers[ControllersTypes.MouseClick];
     }
 
     public void TakeDamage(int damage)
@@ -101,7 +87,7 @@ public class CharacterAgent : MonoBehaviour, IDirectionalRotatable, IExplodable,
 
     public void Die()
     {
-        Dead = true;
+        IsDead = true;
         _masterController.Disable();
         _characterView.Die();
     }

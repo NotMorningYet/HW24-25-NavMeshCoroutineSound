@@ -11,7 +11,7 @@ public class HealthSpeedModifier : ISpeedModifier
 
     public float GetModifier()
     {
-        if (_health.Injured)
+        if (_health.IsInjured)
             return _injuredMultiplier;
         else 
             return _healthyMultiplier;

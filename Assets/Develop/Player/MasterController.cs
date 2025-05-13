@@ -5,22 +5,24 @@ using UnityEngine;
 public class MasterController : Controller
 {
     private CharacterAgent _character;
-    private Dictionary<ControllersTypes, Controller> _controllers;
     private Controller _currentController;
     private ControllerSwitcher _controllerSwitcher;
+    private Dictionary<ControllersTypes, Controller> _controllers = new Dictionary<ControllersTypes, Controller>();
+    private IMoverListener _moverListnener;
 
     private const int leftMouseButton = 0;
     private float _lazyTimeBeforePatrol = 5;
     private Coroutine _lazyCoroutine;
     private MonoBehaviour _coroutineRunner;
     private bool _isLazy;
+    private float _patrolingRadius = 7;
+    private ControllersTypes _defaultController = ControllersTypes.MouseClick;
 
-    public MasterController(CharacterAgent character, Dictionary<ControllersTypes, Controller> controllers, Controller defaultController)
+    public MasterController(CharacterAgent character, IMoverListener moverListnener)
     {
-        _controllers = controllers;
-        _character = character;
-        _currentController = defaultController;
-        _coroutineRunner = character as MonoBehaviour; ;
+        _character = character;        
+        _coroutineRunner = character as MonoBehaviour;
+        _moverListnener = moverListnener;
 
         Initialize();
     }
@@ -45,11 +47,19 @@ public class MasterController : Controller
 
     private void Initialize()
     {
+        CreateControllers(_moverListnener);
+        _currentController = _controllers[_defaultController];
         _controllerSwitcher = new ControllerSwitcher(_controllers);
         _currentController.Enable();
         _isLazy = true;
         StartLazyTimer();
 
+    }
+
+    private void CreateControllers(IMoverListener moverListnener)
+    {
+        _controllers.Add(ControllersTypes.MouseClick, new NavMeshAgentMouseController(_character, moverListnener));
+        _controllers.Add(ControllersTypes.Patrol, new NavMeshPatrolController(_character, moverListnener, _patrolingRadius));
     }
 
     private void SwitchingLogic()

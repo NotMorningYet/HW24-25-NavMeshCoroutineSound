@@ -17,8 +17,8 @@ public class Health : ISpeedModifier
     }
 
     public int HP => _health;
-    public bool Injured => _health <= _maxHealth * _percentToInjured / 100;
-    public bool Died => _died;
+    public bool IsInjured => _health <= _maxHealth * _percentToInjured / 100;
+    public bool IsDead => _died;
 
     public void ChangeHealth(int deltaHealth)
     {
@@ -38,7 +38,7 @@ public class Health : ISpeedModifier
 
     public float GetModifier()
     {
-        if (Injured)
+        if (IsInjured)
             return _injuredSpeedModifier;
         
         return 1f;
