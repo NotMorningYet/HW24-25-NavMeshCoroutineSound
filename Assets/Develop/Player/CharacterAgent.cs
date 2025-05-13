@@ -62,7 +62,7 @@ public class CharacterAgent : MonoBehaviour, IDirectionalRotatable, IExplodable,
 
     private void UpdateControllers()
     {
-        _masterController.Update(Time.deltaTime);
+
         _rotator.SetInputDirection(_agent.desiredVelocity);
         _rotator.Update(Time.deltaTime);
     }
