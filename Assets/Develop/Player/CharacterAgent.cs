@@ -17,8 +17,6 @@ public class CharacterAgent : MonoBehaviour, IDirectionalRotatable, IExplodable,
     private AgentMover _mover;
     private AgentJumper _jumper;
     private Explodable _explodable;
-    private MasterController _masterController;
-
 
     public Vector3 CurrentVelocity => _mover.CurrentVelocity;
     public Vector3 CurrentPosition => transform.position;
@@ -27,10 +25,8 @@ public class CharacterAgent : MonoBehaviour, IDirectionalRotatable, IExplodable,
     public bool IsInjured => _health.IsInjured;
     public bool IsDead { get; private set; }
 
-    public void Initialize(MasterController masterController)
+    public void Initialize()
     {
-        _masterController = masterController;
-
         _health = new Health(_maxHealth, _percentToInjured);
         _explodable = new Explodable();
 
@@ -62,7 +58,6 @@ public class CharacterAgent : MonoBehaviour, IDirectionalRotatable, IExplodable,
 
     private void UpdateControllers()
     {
-
         _rotator.SetInputDirection(_agent.desiredVelocity);
         _rotator.Update(Time.deltaTime);
     }
@@ -88,7 +83,6 @@ public class CharacterAgent : MonoBehaviour, IDirectionalRotatable, IExplodable,
     public void Die()
     {
         IsDead = true;
-        _masterController.Disable();
         _characterView.Die();
     }
 
